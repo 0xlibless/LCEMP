@@ -103,7 +103,7 @@ required_assets:
 
 install:
   - Get required assets.
-  - Replace your Minecraft.Client source folder with this one.
+  - Replace your Minecraft.Client and Minecraft.World source folder with this one.
   - Build.
   - Run with optional launch arguments if needed.
 
