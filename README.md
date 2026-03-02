@@ -15,6 +15,7 @@ LCEMP is my Minecraft Legacy Console Edition source fork that enables LAN multip
   - Keyboard and mouse support
   - Gamma fixed
   - Fullscreen support
+  - Custom Skins
 
 ## launch_arguments:
   - name: -name
