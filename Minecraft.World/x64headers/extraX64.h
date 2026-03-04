@@ -13,14 +13,22 @@
 
 typedef unsigned char byte;
 
+#ifndef XUSER_INDEX_ANY
 const int XUSER_INDEX_ANY = 255;
+#endif
+#ifndef XUSER_INDEX_FOCUS
 const int XUSER_INDEX_FOCUS = 254;
+#endif
 
 #ifdef __PSVITA__
+#ifndef XUSER_MAX_COUNT
 const int XUSER_MAX_COUNT = 1;
+#endif
 const int MINECRAFT_NET_MAX_PLAYERS = 4;
 #else
+#ifndef XUSER_MAX_COUNT
 const int XUSER_MAX_COUNT = 4;
+#endif
 const int MINECRAFT_NET_MAX_PLAYERS = 8;
 #endif
 

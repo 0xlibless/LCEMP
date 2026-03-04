@@ -756,6 +756,9 @@ int CMinecraftApp::SetDefaultOptions(C_4JProfile::PROFILESETTINGS *pSettings,con
 	// PS3DEC13
 	SetGameSettings(iPad,eGameSetting_PS3_EULA_Read,0); // EULA not read
 
+	// Windows64
+	SetGameSettings(iPad,eGameSetting_Fullscreen,1); // fullscreen on by default
+
 	// PS3 1.05 - added Greek
 	GameSettingsA[iPad]->ucLanguage = MINECRAFT_LANGUAGE_DEFAULT; // use the system language
 //#endif
@@ -1376,6 +1379,9 @@ void CMinecraftApp::ActionGameSettings(int iPad,eGameSetting eVal)
 		//nothing to do here
 		break;
 	case eGameSetting_PSVita_NetworkModeAdhoc:
+		//nothing to do here
+		break;
+	case eGameSetting_Fullscreen:
 		//nothing to do here
 		break;
 	}
@@ -2047,6 +2053,21 @@ void CMinecraftApp::SetGameSettings(int iPad,eGameSetting eVal,unsigned char ucV
 			GameSettingsA[iPad]->bSettingsChanged=true;
 		}		
 		break;	
+	case eGameSetting_Fullscreen:
+		if((GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_FULLSCREEN)!=((ucVal&0x01)<<18))
+		{
+			if(ucVal==1)
+			{
+				GameSettingsA[iPad]->uiBitmaskValues|=GAMESETTING_FULLSCREEN;
+			}
+			else
+			{
+				GameSettingsA[iPad]->uiBitmaskValues&=~GAMESETTING_FULLSCREEN;
+			}
+			ActionGameSettings(iPad,eVal);
+			GameSettingsA[iPad]->bSettingsChanged=true;
+		}
+		break;
 
 	}
 }
@@ -2172,6 +2193,9 @@ unsigned char CMinecraftApp::GetGameSettings(int iPad,eGameSetting eVal)
 
 	case eGameSetting_PSVita_NetworkModeAdhoc:
 		return (GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_PSVITANETWORKMODEADHOC)>>17;
+
+	case eGameSetting_Fullscreen:
+		return (GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_FULLSCREEN)>>18;
 
 	}
 	return 0;

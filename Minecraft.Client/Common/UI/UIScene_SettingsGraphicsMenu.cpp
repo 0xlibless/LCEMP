@@ -18,7 +18,7 @@ UIScene_SettingsGraphicsMenu::UIScene_SettingsGraphicsMenu(int iPad, void *initD
 
 	WCHAR TempString[256];
 	swprintf( (WCHAR *)TempString, 256, L"Fullscreen");
-	m_checkboxFullscreen.init(TempString,eControl_Fullscreen,false);
+	m_checkboxFullscreen.init(TempString,eControl_Fullscreen,(app.GetGameSettings(m_iPad,eGameSetting_Fullscreen)!=0));
 	
 	
 	swprintf( (WCHAR *)TempString, 256, L"%ls: %d%%", app.GetString( IDS_SLIDER_GAMMA ),app.GetGameSettings(m_iPad,eGameSetting_Gamma));	
@@ -116,7 +116,19 @@ void UIScene_SettingsGraphicsMenu::handleInput(int iPad, int key, bool repeat, b
 			app.SetGameSettings(m_iPad,eGameSetting_BedrockFog,m_checkboxBedrockFog.IsChecked()?1:0);
 			app.SetGameSettings(m_iPad,eGameSetting_CustomSkinAnim,m_checkboxCustomSkinAnim.IsChecked()?1:0);
 			
-			// toggle fullscreen stuff here
+			// toggle fullscreen
+			{
+				bool wantFullscreen = m_checkboxFullscreen.IsChecked();
+				bool wasFullscreen = (app.GetGameSettings(m_iPad,eGameSetting_Fullscreen)!=0);
+				app.SetGameSettings(m_iPad,eGameSetting_Fullscreen,wantFullscreen?1:0);
+				if(wantFullscreen != wasFullscreen)
+				{
+#ifdef _WINDOWS64
+					extern void ToggleFullscreen();
+					ToggleFullscreen();
+#endif
+				}
+			}
 
 			navigateBack();
 			handled = true;
@@ -161,11 +173,14 @@ void UIScene_SettingsGraphicsMenu::handleSliderMove(F64 sliderId, F64 currentVal
 		break;
 	case eControl_FOV:
 		{
+			int fovValue = (int)currentValue;
+			m_sliderFov.handleSliderMove(fovValue);
+
 			Minecraft *pMinecraft = Minecraft::GetInstance();
 			pMinecraft->gameRenderer->SetFovVal((float)currentValue);
 
 			WCHAR TempString[256];
-			swprintf( (WCHAR *)TempString, 256, L"FOV: %d", (int)currentValue);
+			swprintf( (WCHAR *)TempString, 256, L"FOV: %d", fovValue);
 			m_sliderFov.setLabel(TempString);
 		}
 		break;

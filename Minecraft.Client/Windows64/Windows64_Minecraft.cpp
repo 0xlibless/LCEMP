@@ -423,6 +423,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (vk == VK_F11)
 		{
 			ToggleFullscreen();
+			app.SetGameSettings(0, eGameSetting_Fullscreen, g_isFullscreen ? 1 : 0);
 			break;
 		}
 		if (vk == VK_SHIFT)
@@ -969,6 +970,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 #endif
 
+	StorageManager.Init(1, app.GetString(IDS_DEFAULT_SAVENAME), "savegame.dat", FIFTY_ONE_MB, &CConsoleMinecraftApp::DisplaySavingMessage, (LPVOID)&app, "MinecraftWindows64");
+	StorageManager.SetMaxSaves(99);
+
+	StorageManager.StoreTMSPathName();
+
 	// Ensure the GameHDD save directory exists at runtime (the 4J_Storage lib expects it)
 	{
 		wchar_t exePath[MAX_PATH];
@@ -1051,6 +1057,14 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	Minecraft *pMinecraft=Minecraft::GetInstance();
 
 	app.InitGameSettings();
+
+	if(app.GetGameSettings(eGameSetting_Fullscreen) != 0)
+	{
+		if(!g_isFullscreen)
+		{
+			ToggleFullscreen();
+		}
+	}
 
 #if 0
 	//bool bDisplayPauseMenu=false;
