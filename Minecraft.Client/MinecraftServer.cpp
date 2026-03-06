@@ -149,7 +149,7 @@ bool MinecraftServer::initServer(__int64 seed, NetworkGameInitData *initData, DW
         //localIp = settings->getString(L"server-ip", L"");
         //onlineMode = settings->getBoolean(L"online-mode", true);
 		//motd = settings->getString(L"motd", L"A Minecraft Server");
-        //motd.replace('§', '$');
+        //motd.replace('ï¿½', '$');
 
         setAnimals(settings->getBoolean(L"spawn-animals", true));
 		setNpcsEnabled(settings->getBoolean(L"spawn-npcs", true));
@@ -925,7 +925,7 @@ void MinecraftServer::stopServer()
 
 	// On Durango/Orbis, we need to wait for all the asynchronous saving processes to complete before destroying the levels, as that will ultimately delete
 	// the directory level storage & therefore the ConsoleSaveSplit instance, which needs to be around until all the sub files have completed saving.
-#if defined(_DURANGO) || defined(__ORBIS__) || defined(__PSVITA__)
+#if defined(_DURANGO) || defined(__ORBIS__) || defined(__PSVITA__) || defined(_WINDOWS64)
 	while(StorageManager.GetSaveState() != C4JStorage::ESaveGame_Idle )
 	{
 		Sleep(10);

@@ -423,6 +423,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (vk == VK_F11)
 		{
 			ToggleFullscreen();
+			app.SetGameSettings(0, eGameSetting_Fullscreen, g_isFullscreen ? 1 : 0);
 			break;
 		}
 		if (vk == VK_SHIFT)
@@ -806,6 +807,32 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			nameBuf[n] = 0;
 			strncpy_s(g_Win64Username, 17, nameBuf, _TRUNCATE);
 		}
+
+		char *ipArg = strstr(cmdLineA, "-ip ");
+		if (ipArg)
+		{
+			ipArg += 4;
+			while (*ipArg == ' ') ipArg++;
+			char ipBuf[256];
+			int n = 0;
+			while (ipArg[n] && ipArg[n] != ' ' && n < 255) { ipBuf[n] = ipArg[n]; n++; }
+			ipBuf[n] = 0;
+			strncpy_s(g_Win64MultiplayerIP, 256, ipBuf, _TRUNCATE);
+			g_Win64MultiplayerJoin = true;
+		}
+
+		char *portArg = strstr(cmdLineA, "-port ");
+		if (portArg)
+		{
+			portArg += 6;
+			while (*portArg == ' ') portArg++;
+			char portBuf[16];
+			int n = 0;
+			while (portArg[n] && portArg[n] != ' ' && n < 15) { portBuf[n] = portArg[n]; n++; }
+			portBuf[n] = 0;
+			g_Win64MultiplayerPort = atoi(portBuf);
+			if (g_Win64MultiplayerPort <= 0) g_Win64MultiplayerPort = WIN64_NET_DEFAULT_PORT;
+		}
 	}
 
 	if (g_Win64Username[0] == 0)
@@ -969,6 +996,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 #endif
 
+	StorageManager.Init(1, app.GetString(IDS_DEFAULT_SAVENAME), "savegame.dat", FIFTY_ONE_MB, &CConsoleMinecraftApp::DisplaySavingMessage, (LPVOID)&app, "MinecraftWindows64");
+	StorageManager.SetMaxSaves(99);
+
+	StorageManager.StoreTMSPathName();
+
 	// Ensure the GameHDD save directory exists at runtime (the 4J_Storage lib expects it)
 	{
 		wchar_t exePath[MAX_PATH];
@@ -1052,6 +1084,14 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	app.InitGameSettings();
 
+	if(app.GetGameSettings(eGameSetting_Fullscreen) != 0)
+	{
+		if(!g_isFullscreen)
+		{
+			ToggleFullscreen();
+		}
+	}
+
 #if 0
 	//bool bDisplayPauseMenu=false;
 
@@ -1099,9 +1139,19 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	app.NavigateToScene(XUSER_INDEX_ANY,eUIScene_Intro,&initData);
 #endif
 
-	// Set the default sound levels
-	pMinecraft->options->set(Options::Option::MUSIC,1.0f);
-	pMinecraft->options->set(Options::Option::SOUND,1.0f);
+	app.ApplyGameSettingsChanged(ProfileManager.GetPrimaryPad());
+
+#ifdef _DEBUG_MENUS_ENABLED
+	if(app.DebugSettingsOn())
+	{
+		app.ActionDebugMask(ProfileManager.GetPrimaryPad());
+	}
+	else
+	{
+		// force debug mask off
+		app.ActionDebugMask(ProfileManager.GetPrimaryPad(),true);
+	}
+#endif
 
 	//app.TemporaryCreateGameStart();
 

@@ -673,7 +673,12 @@ void CMinecraftApp::InitGameSettings()
 		C_4JProfile::PROFILESETTINGS *pProfileSettings=ProfileManager.GetDashboardProfileSettings(i);
 		// clear this for now - it will come from reading the system values
 		memset(pProfileSettings,0,sizeof(C_4JProfile::PROFILESETTINGS));
-		SetDefaultOptions(pProfileSettings,i);
+
+		extern bool Win64_HasSavedProfile(int iPad);
+		if (!Win64_HasSavedProfile(i))
+		{
+			SetDefaultOptions(pProfileSettings,i);
+		}
 #elif defined __PS3__ || defined __ORBIS__ || defined _DURANGO  || defined __PSVITA__
 		C4JStorage::PROFILESETTINGS *pProfileSettings=StorageManager.GetDashboardProfileSettings(i);
 		// 4J-PB - don't cause an options write to happen here
@@ -754,6 +759,9 @@ int CMinecraftApp::SetDefaultOptions(C_4JProfile::PROFILESETTINGS *pSettings,con
 //#ifdef __PS3__
 	// PS3DEC13
 	SetGameSettings(iPad,eGameSetting_PS3_EULA_Read,0); // EULA not read
+
+	// Windows64
+	SetGameSettings(iPad,eGameSetting_Fullscreen,1); // fullscreen on by default
 
 	// PS3 1.05 - added Greek
 	GameSettingsA[iPad]->ucLanguage = MINECRAFT_LANGUAGE_DEFAULT; // use the system language
@@ -1375,6 +1383,9 @@ void CMinecraftApp::ActionGameSettings(int iPad,eGameSetting eVal)
 		//nothing to do here
 		break;
 	case eGameSetting_PSVita_NetworkModeAdhoc:
+		//nothing to do here
+		break;
+	case eGameSetting_Fullscreen:
 		//nothing to do here
 		break;
 	}
@@ -2046,6 +2057,21 @@ void CMinecraftApp::SetGameSettings(int iPad,eGameSetting eVal,unsigned char ucV
 			GameSettingsA[iPad]->bSettingsChanged=true;
 		}		
 		break;	
+	case eGameSetting_Fullscreen:
+		if((GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_FULLSCREEN)!=((ucVal&0x01)<<18))
+		{
+			if(ucVal==1)
+			{
+				GameSettingsA[iPad]->uiBitmaskValues|=GAMESETTING_FULLSCREEN;
+			}
+			else
+			{
+				GameSettingsA[iPad]->uiBitmaskValues&=~GAMESETTING_FULLSCREEN;
+			}
+			ActionGameSettings(iPad,eVal);
+			GameSettingsA[iPad]->bSettingsChanged=true;
+		}
+		break;
 
 	}
 }
@@ -2171,6 +2197,9 @@ unsigned char CMinecraftApp::GetGameSettings(int iPad,eGameSetting eVal)
 
 	case eGameSetting_PSVita_NetworkModeAdhoc:
 		return (GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_PSVITANETWORKMODEADHOC)>>17;
+
+	case eGameSetting_Fullscreen:
+		return (GameSettingsA[iPad]->uiBitmaskValues&GAMESETTING_FULLSCREEN)>>18;
 
 	}
 	return 0;

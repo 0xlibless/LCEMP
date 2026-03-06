@@ -97,6 +97,8 @@ Minecraft.Client/Windows64/GameHDD/
 # Arc archives (packed texture/media bundles)
 *.arc
 
+!Minecraft.Client/Common/Media/MediaWindows64.arc
+
 # Miles Sound System redistributables
 Minecraft.Client/redist64/
 *.asi
@@ -108,6 +110,10 @@ Minecraft.Client/redist64/
 
 # 4J Studios proprietary libraries
 **/4JLibs/
+
+!Minecraft.Client/Windows64/4JLibs/
+!Minecraft.Client/Windows64/4JLibs/inc/
+!Minecraft.Client/Windows64/4JLibs/inc/4J_Storage.h
 
 # Miles Sound System (RAD Game Tools)
 **/Miles/
