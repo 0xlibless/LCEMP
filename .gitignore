@@ -210,3 +210,6 @@ Minecraft.Client/Common/Network/Sony/
 # CustomSkins exception
 # ===========================================
 !CustomSkins/*
+
+Minecraft.Server/
+build_dedicated/

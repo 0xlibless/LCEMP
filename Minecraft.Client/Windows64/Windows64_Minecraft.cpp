@@ -17,6 +17,7 @@
 #include "..\..\Minecraft.World\Vec3.h"
 #include "..\..\Minecraft.World\Level.h"
 #include "..\..\Minecraft.World\net.minecraft.world.level.tile.h"
+#include "..\MultiplayerLocalPlayer.h"
 
 #include "..\ClientConnection.h"
 #include "..\User.h"
@@ -39,6 +40,8 @@
 #include "..\..\Minecraft.World\OldChunkStorage.h"
 
 #include "Network\WinsockNetLayer.h"
+
+#include "..\PlayerRenderer.h"
 
 #include "Windows64_PostProcess.h"
 
@@ -265,7 +268,7 @@ HRESULT InitD3D( IDirect3DDevice9 **ppDevice,
 	pd3dPP->EnableAutoDepthStencil = TRUE;
 	pd3dPP->AutoDepthStencilFormat = D3DFMT_D24S8;
 	pd3dPP->SwapEffect             = D3DSWAPEFFECT_DISCARD;
-	pd3dPP->PresentationInterval   = D3DPRESENT_INTERVAL_ONE;
+	pd3dPP->PresentationInterval   = D3DPRESENT_INTERVAL_IMMEDIATE;
 	//pd3dPP->Flags				   = D3DPRESENTFLAG_NO_LETTERBOX;
 	//ERR[D3D]: Can't set D3DPRESENTFLAG_NO_LETTERBOX when wide-screen is enabled
 	//	in the launcher/dashboard.
@@ -492,6 +495,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 				}
 			}
+#ifdef _WINDOWS64
+			Minecraft* instance = Minecraft::GetInstance();
+			if (!instance)
+				break;
+
+			LocalPlayer* player = instance->localplayers[0].get();
+			if (!player)
+				break;
+
+			int iPad = player->GetXboxPad();
+			if (iPad == 0 && g_KBMInput.IsMouseGrabbed() && g_KBMInput.IsKBMActive())
+			{
+				int dx = g_KBMInput.GetRawDeltaX();
+				int dy = g_KBMInput.GetRawDeltaY();
+				g_KBMInput.ConsumeMouseDelta();
+
+				if (dx != 0 || dy != 0)
+				{
+					float mouseSensitivity = ((float)app.GetGameSettings(iPad, eGameSetting_Sensitivity_InGame)) / 100.0f;
+					float mouseLookScale = 1.0f;
+					float mdx = dx * mouseSensitivity * mouseLookScale;
+					float mdy = -dy * mouseSensitivity * mouseLookScale;
+
+					if (app.GetGameSettings(iPad, eGameSetting_ControlInvertLook))
+						mdy = -mdy;
+						instance->player->turn(mdx, mdy);
+				}
+			}
+#endif
 		}
 		break;
 
@@ -760,8 +792,6 @@ void CleanupDevice()
 	if( g_pd3dDevice ) g_pd3dDevice->Release();
 }
 
-
-
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 					   _In_opt_ HINSTANCE hPrevInstance,
 					   _In_ LPTSTR    lpCmdLine,
@@ -833,6 +863,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			g_Win64MultiplayerPort = atoi(portBuf);
 			if (g_Win64MultiplayerPort <= 0) g_Win64MultiplayerPort = WIN64_NET_DEFAULT_PORT;
 		}
+
 	}
 
 	if (g_Win64Username[0] == 0)
@@ -1040,6 +1071,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	}
 	extern wchar_t g_Win64UsernameW[17];
 	wcscpy_s(IQNet::m_player[0].m_gamertag, 32, g_Win64UsernameW);
+
+	PlayerRenderer::InitNametagColors();
 
 	WinsockNetLayer::Initialize();
 

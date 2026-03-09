@@ -118,7 +118,7 @@ void PlayerConnection::disconnect(DisconnectPacket::eDisconnectReason reason)
 		return;
 	}
 
-	app.DebugPrintf("PlayerConnection disconect reason: %d\n", reason );
+	app.DebugPrintf("PlayerConnection disconnect reason: %d", reason );
 	player->disconnect();
 
 	// 4J Stu - Need to remove the player from the receiving list before their socket is NULLed so that we can find another player on their system
@@ -130,10 +130,16 @@ void PlayerConnection::disconnect(DisconnectPacket::eDisconnectReason reason)
 	if(getWasKicked())
 	{
 		server->getPlayers()->broadcastAll( shared_ptr<ChatPacket>( new ChatPacket(player->name, ChatPacket::e_ChatPlayerKickedFromGame) ) );
+#ifdef WITH_SERVER_CODE
+		app.DebugPrintf("%ls was kicked from the game", player->name.c_str());
+#endif
 	}
 	else
 	{
 		server->getPlayers()->broadcastAll( shared_ptr<ChatPacket>( new ChatPacket(player->name, ChatPacket::e_ChatPlayerLeftGame) ) );
+#ifdef WITH_SERVER_CODE
+		app.DebugPrintf("%ls left the game", player->name.c_str());
+#endif
 	}
 	
 	server->getPlayers()->remove(player);
@@ -1506,7 +1512,10 @@ void PlayerConnection::handleCustomPayload(shared_ptr<CustomPayloadPacket> custo
 void PlayerConnection::handleDebugOptions(shared_ptr<DebugOptionsPacket> packet)
 {
 	//Player player = dynamic_pointer_cast<Player>( player->shared_from_this() );
-	player->SetDebugOptions(packet->m_uiVal);
+	if(app.DebugSettingsOn())
+	{
+		player->SetDebugOptions(packet->m_uiVal);
+	}
 }
 
 void PlayerConnection::handleCraftItem(shared_ptr<CraftItemPacket> packet)
@@ -1514,6 +1523,10 @@ void PlayerConnection::handleCraftItem(shared_ptr<CraftItemPacket> packet)
 	int iRecipe = packet->recipe;
 
 	if(iRecipe == -1)
+		return;
+
+	int recipeCount = (int)Recipes::getInstance()->getRecipies()->size();
+	if(iRecipe < 0 || iRecipe >= recipeCount)
 		return;
 
 	Recipy::INGREDIENTS_REQUIRED *pRecipeIngredientsRequired=Recipes::getInstance()->getRecipeIngredientsArray();

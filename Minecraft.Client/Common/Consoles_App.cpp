@@ -1,6 +1,7 @@
 ﻿
 #include "stdafx.h"
 
+#include <time.h>
 #include "..\..\Minecraft.World\Recipy.h"
 #include "..\..\Minecraft.Client\Options.h"
 #include "..\..\Minecraft.World\AABB.h"
@@ -240,6 +241,26 @@ void CMinecraftApp::DebugPrintf(const char *szFormat, ...)
 	vsnprintf(buf, sizeof(buf), szFormat, ap);
 	va_end(ap);
 	OutputDebugStringA(buf);
+#ifdef WITH_SERVER_CODE
+	bool hasContent = false;
+	for (const char *p = buf; *p; p++) {
+		if (*p != ' ' && *p != '\t' && *p != '\n' && *p != '\r' && *p != '=') {
+			hasContent = true;
+			break;
+		}
+	}
+	if (hasContent)
+	{
+		size_t len = strlen(buf);
+		while (len > 0 && (buf[len-1] == '\n' || buf[len-1] == '\r'))
+			buf[--len] = '\0';
+
+		time_t now = time(NULL);
+		struct tm t;
+		localtime_s(&t, &now);
+		printf("[%02d:%02d:%02d] [Server thread/INFO]: %s\n", t.tm_hour, t.tm_min, t.tm_sec, buf);
+	}
+#endif
 #endif
 
 }
@@ -302,6 +323,9 @@ LPCWSTR CMinecraftApp::GetString(int iID)
 {
 	//return L"Değişiklikler ve Yenilikler";
 	//return L"ÕÕÕÕÖÖÖÖ";
+#ifdef WITH_SERVER_CODE
+	if (!app.m_stringTable) return L"";
+#endif
 	return app.m_stringTable->getString(iID);
 }
 
